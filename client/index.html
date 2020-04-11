@@ -1,0 +1,55 @@
+<canvas id="ctx" width="1300" height="600" style="border:1px solid #000000;"></canvas>
+
+<script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+<script>
+    const LEFT_KEY_CODE = 37;
+    const UP_KEY_CODE = 38;
+    const RIGHT_KEY_CODE = 39;
+    const DOWN_KEY_CODE = 40;
+    let socket = io();
+
+    document.onkeydown = function (event) {
+        switch (event.keyCode) {
+            case LEFT_KEY_CODE:
+                socket.emit("keyPress", { inputId: "left", state: true });
+                break;
+            case UP_KEY_CODE:
+                socket.emit("keyPress", { inputId: "up", state: true });
+                break;
+            case RIGHT_KEY_CODE:
+                socket.emit("keyPress", { inputId: "right", state: true });
+                break;
+            case DOWN_KEY_CODE:
+                socket.emit("keyPress", { inputId: "down", state: true });
+                break;
+        }
+    };
+
+    document.onkeyup = function (event) {
+        switch (event.keyCode) {
+            case LEFT_KEY_CODE:
+                socket.emit("keyPress", { inputId: "left", state: false });
+                break;
+            case UP_KEY_CODE:
+                socket.emit("keyPress", { inputId: "up", state: false });
+                break;
+            case RIGHT_KEY_CODE:
+                socket.emit("keyPress", { inputId: "right", state: false });
+                break;
+            case DOWN_KEY_CODE:
+                socket.emit("keyPress", { inputId: "down", state: false });
+                break;
+        }
+    };
+
+    var ctx = document.getElementById("ctx").getContext("2d");
+    ctx.font = "30px Arial";
+
+    socket.on("newPositions", function (data) {
+        ctx.clearRect(0, 0, 1300, 600);
+        for (let i = 0; i < data.length; i++) {
+            ctx.fillText(":)", data[i].x, data[i].y);
+        }
+    });
+
+</script>
