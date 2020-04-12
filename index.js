@@ -16,6 +16,8 @@ console.log("Server started at port 2000");
 let socketDict = {};
 let w = require("./objects/world");
 
+w.heartDict = w.generateHeartDict(2);// TODO: # players should be know from the start
+
 let Player = function (id) {
     let self = {
         x: 250,
@@ -27,7 +29,7 @@ let Player = function (id) {
         pressingUp: false,
         pressingRight: false,
         pressingDown: false,
-        speed: 8,
+        speed: 3,
         team: 1 + (Object.keys(w.playerDict).length % 2)
     };
     self.updatePosition = function () {
@@ -91,10 +93,6 @@ io.sockets.on("connection", function (socket) {
     player = Player(socket.id);
     w.playerDict[socket.id] = player;
 
-    if (Object.keys(w.playerDict).length == 1) {
-        w.heartDict = w.generateHeartDict(2);// TODO: # players should be know from the start
-    }
-
     socket.emit("yourPlayerId", socket.id);
     socket.emit("yourPlayerTeam", player.team);
     socket.emit("heartDict", w.heartDict);
@@ -138,7 +136,7 @@ setInterval(function () {
         w.playerDict[i].updatePosition();
     }
 
-    w.moveProjectiles();
+    w.moveProjectiles(w.projectileDict);
     for (let i in w.projectileDict) {
         w.checkProjectileHitBoxAllPlayers(i);
         heartHitList.push(w.checkProjectileHitBoxAllHearts(i));

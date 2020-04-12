@@ -10,12 +10,16 @@ let removeProjectiles = function () {
     }
 };
 
-let moveProjectiles = function () {
-    for (let i in world.projectileDict) {
-        world.projectileDict[i].x += world.projectileDict[i].xVelocity;
-        world.projectileDict[i].y += world.projectileDict[i].yVelocity;
+let moveProjectile = function (projectile) {
+    projectile.x += projectile.xVelocity;
+    projectile.y += projectile.yVelocity;
 
-        world.projectileDict[i].yVelocity += 0.11;
+    projectile.yVelocity += 0.11;
+};
+
+let moveProjectiles = function (projectileDict) {
+    for (let i in projectileDict) {
+        moveProjectile(projectileDict[i]);
     }
 };
 
@@ -78,14 +82,14 @@ let generateHeartDict = function (numPlayers) {
                 health: 3
             };
             heartDict["2"] = {
-                x: 1025,
+                x: 975,
                 y: 400,
                 width: 40,
                 height: 40,
                 health: 3
             };
             heartDict["3"] = {
-                x: 1200,
+                x: 1100,
                 y: 400,
                 width: 40,
                 height: 40,
@@ -99,6 +103,7 @@ let generateHeartDict = function (numPlayers) {
 
 let world = {
     removeProjectiles: removeProjectiles,
+    moveProjectile: moveProjectile,
     moveProjectiles: moveProjectiles,
     checkProjectileHitBoxAllHearts: checkProjectileHitBoxAllHearts,
     checkProjectileHitBoxAllPlayers: checkProjectileHitBoxAllPlayers,
