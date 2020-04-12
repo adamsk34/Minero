@@ -19,15 +19,14 @@ let moveProjectiles = function () {
     }
 };
 
-let checkProjectileHitBoxPlayer = function (index) {
+let checkProjectileHitBoxAllPlayers = function (index) {
     let projectile = world.projectileDict[index];
     let playerId;
 
     if (projectile) {
         for (let i in world.playerDict) {
             let player = world.playerDict[i];
-            if (projectile.x < player.x + 20 && player.x - 10 < projectile.x
-                && projectile.y < player.y + 30 && player.y - 25 < projectile.y && player.team == 2) {
+            if (checkIfTouching(projectile, player) && player.team == 2) {
                 playerId = i;
                 delete world.projectileDict[index];
             }
@@ -37,15 +36,24 @@ let checkProjectileHitBoxPlayer = function (index) {
     return playerId;
 };
 
-let checkProjectileHitBoxHeart = function (index) {
+let checkIfTouching = function (object1, object2) {
+    let minDistX = object1.width / 2 + object2.width / 2;
+    let minDistY = object1.height / 2 + object2.height / 2;
+
+    return (object1.x < object2.x + minDistX
+        && object2.x < object1.x + minDistX
+        && object1.y < object2.y + minDistY
+        && object2.y < object1.y + minDistY);
+};
+
+let checkProjectileHitBoxAllHearts = function (index) {
     let projectile = world.projectileDict[index];
     let heartId;
 
     if (projectile) {
         for (let i in world.heartDict) {
             let heart = world.heartDict[i];
-            if (projectile.x < heart.x + 20 && heart.x - 10 < projectile.x
-                && projectile.y < heart.y + 30 && heart.y - 25 < projectile.y && heart.health > 0) {
+            if (checkIfTouching(projectile, heart) && heart.health > 0) {
                 heartId = i;
                 heart.health--;
                 delete world.projectileDict[index];
@@ -56,34 +64,46 @@ let checkProjectileHitBoxHeart = function (index) {
     return heartId;
 };
 
-let generateHearts = function (numPlayers) {
+let generateHeartDict = function (numPlayers) {
+    let heartDict;
+
     switch (numPlayers) {
         case 2:
-            world.heartDict["1"] = {
+            heartDict = {};
+            heartDict["1"] = {
                 x: 850,
                 y: 400,
+                width: 40,
+                height: 40,
                 health: 3
             };
-            world.heartDict["2"] = {
+            heartDict["2"] = {
                 x: 1025,
                 y: 400,
+                width: 40,
+                height: 40,
                 health: 3
             };
-            world.heartDict["3"] = {
+            heartDict["3"] = {
                 x: 1200,
                 y: 400,
+                width: 40,
+                height: 40,
                 health: 3
             };
             break;
     }
+
+    return heartDict;
 }
 
 let world = {
     removeProjectiles: removeProjectiles,
     moveProjectiles: moveProjectiles,
-    checkProjectileHitBoxHeart: checkProjectileHitBoxHeart,
-    checkProjectileHitBoxPlayer: checkProjectileHitBoxPlayer,
-    generateHearts: generateHearts,
+    checkProjectileHitBoxAllHearts: checkProjectileHitBoxAllHearts,
+    checkProjectileHitBoxAllPlayers: checkProjectileHitBoxAllPlayers,
+    generateHeartDict: generateHeartDict,
+    checkIfTouching: checkIfTouching,
     playerDict: {},
     projectileDict: {},
     heartDict: {}

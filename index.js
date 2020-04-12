@@ -20,6 +20,8 @@ let Player = function (id) {
     let self = {
         x: 250,
         y: 250,
+        width: 50,
+        height: 50,
         id: id,
         pressingLeft: false,
         pressingUp: false,
@@ -90,7 +92,7 @@ io.sockets.on("connection", function (socket) {
     w.playerDict[socket.id] = player;
 
     if (Object.keys(w.playerDict).length == 1) {
-        w.generateHearts(2);// TODO: # players should be know from the start
+        w.heartDict = w.generateHeartDict(2);// TODO: # players should be know from the start
     }
 
     socket.emit("yourPlayerId", socket.id);
@@ -123,6 +125,8 @@ io.sockets.on("connection", function (socket) {
         let projId = Math.random();
 
         w.projectileDict[projId] = data;
+        w.projectileDict[projId].width = 10;
+        w.projectileDict[projId].height = 10;
         w.removeProjectiles();
     });
 });
@@ -136,8 +140,8 @@ setInterval(function () {
 
     w.moveProjectiles();
     for (let i in w.projectileDict) {
-        w.checkProjectileHitBoxPlayer(i);
-        heartHitList.push(w.checkProjectileHitBoxHeart(i));
+        w.checkProjectileHitBoxAllPlayers(i);
+        heartHitList.push(w.checkProjectileHitBoxAllHearts(i));
     }
 
     for (let i in socketDict) {
