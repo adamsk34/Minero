@@ -13,8 +13,9 @@ app.use("/client", express.static(__dirname + "/client"));
 serv.listen(2000);
 console.log("Server started");
 
-let SOCKET_LIST = {};
-let PLAYER_LIST = {};
+let socketDict = {};
+let playerDict = {};
+let projectileDict = {};
 
 let Player = function (id) {
     let self = {
@@ -55,18 +56,17 @@ let Player = function (id) {
 let io = socketIO(serv, {});
 io.sockets.on("connection", function (socket) {
     socket.id = Math.random();
-    SOCKET_LIST[socket.id] = socket;
+    socketDict[socket.id] = socket;
 
     let player = Player(socket.id);
-    PLAYER_LIST[socket.id] = player;
+    playerDict[socket.id] = player;
+
+    socket.emit("yourPlayerId", socket.id);
 
     socket.on("disconnect", function () {
-        delete SOCKET_LIST[socket.id];
-        delete PLAYER_LIST[socket.id];
+        delete socketDict[socket.id];
+        delete playerDict[socket.id];
     });
-
-
-
 
     socket.on("keyPress", function (data) {
         switch (data.inputId) {
@@ -84,20 +84,53 @@ io.sockets.on("connection", function (socket) {
                 break;
         }
     });
+
+    socket.on("shootProjectile", function (data) {
+        let projId = Math.random();
+
+        projectileDict[projId] = data;
+        removeProjectiles();
+    });
 });
 
+let removeProjectiles = function () {
+    let oobProjList = [];
+    for (let i in projectileDict) {
+        if (projectileDict[i].x < -5 || projectileDict[i].x > 1305 || projectileDict[i].y < -5 || projectileDict[i].y > 605) {
+            oobProjList.push(i);
+        }
+    }
+    for (let i in oobProjList) {
+        delete projectileDict[oobProjList[i]];
+    }
+};
+
+let moveProjectiles = function () {
+    for (let i in projectileDict) {
+        projectileDict[i].x += projectileDict[i].xVelocity;
+        projectileDict[i].y += projectileDict[i].yVelocity;
+
+        projectileDict[i].yVelocity += 0.5;
+    }
+};
+
 setInterval(function () {
-    let pack = [];
-    for (let i in PLAYER_LIST) {
-        let player = PLAYER_LIST[i];
+    let playerPack = [];
+    for (let i in playerDict) {
+        let player = playerDict[i];
         player.updatePosition();
-        pack.push({
+        playerPack.push({
             x: player.x,
             y: player.y,
+            id: player.id
         });
     }
-    for (let i in SOCKET_LIST) {
-        let socket = SOCKET_LIST[i];
-        socket.emit("newPositions", pack);
+
+    moveProjectiles();
+
+    for (let i in socketDict) {
+        let socket = socketDict[i];
+        socket.emit("newPlayerPositions", playerPack);
+        socket.emit("newProjectilePositions", projectileDict);
     }
-}, 1000 / 25);
+}, 1000 / 60);

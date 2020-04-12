@@ -6,50 +6,101 @@
     const UP_KEY_CODE = 38;
     const RIGHT_KEY_CODE = 39;
     const DOWN_KEY_CODE = 40;
+    const A_KEY_CODE = 65;
+    const W_KEY_CODE = 87;
+    const D_KEY_CODE = 68;
+    const S_KEY_CODE = 83;
+    let myPlayer = {};
     let socket = io();
+    let playerList = [];
+    let projectileDict = {};
+
+    document.body.onmousedown = function (event) {
+        let xDirection = (event.x - myPlayer.x);// = 100
+        let yDirection = (event.y - myPlayer.y);// -100
+        let xVel = 1.5 * xDirection / (Math.abs(xDirection) + Math.abs(yDirection));
+        let yVel = -1.5 * yDirection / (Math.abs(xDirection) + Math.abs(yDirection));
+
+        let newXVel = xVel * (1 + 0.2 * (1.5 - Math.abs(Math.abs(xVel) - Math.abs(yVel))));
+        let newYVel = yVel * (1 + 0.2 * (1.5 - Math.abs(Math.abs(xVel) - Math.abs(yVel))));
+
+        socket.emit("shootProjectile", {
+            x: myPlayer.x,
+            y: myPlayer.y,
+            xVelocity: 13 * newXVel,
+            yVelocity: -13 * newYVel
+        });
+    };
 
     document.onkeydown = function (event) {
-        switch (event.keyCode) {
-            case LEFT_KEY_CODE:
-                socket.emit("keyPress", { inputId: "left", state: true });
-                break;
-            case UP_KEY_CODE:
-                socket.emit("keyPress", { inputId: "up", state: true });
-                break;
-            case RIGHT_KEY_CODE:
-                socket.emit("keyPress", { inputId: "right", state: true });
-                break;
-            case DOWN_KEY_CODE:
-                socket.emit("keyPress", { inputId: "down", state: true });
-                break;
+        if (event.keyCode === LEFT_KEY_CODE || event.keyCode === A_KEY_CODE) {
+            socket.emit("keyPress", { inputId: "left", state: true });
+        }
+        if (event.keyCode === UP_KEY_CODE || event.keyCode === W_KEY_CODE) {
+            socket.emit("keyPress", { inputId: "up", state: true });
+        }
+        if (event.keyCode === RIGHT_KEY_CODE || event.keyCode === D_KEY_CODE) {
+            socket.emit("keyPress", { inputId: "right", state: true });
+        }
+        if (event.keyCode === DOWN_KEY_CODE || event.keyCode === S_KEY_CODE) {
+            socket.emit("keyPress", { inputId: "down", state: true });
         }
     };
 
     document.onkeyup = function (event) {
-        switch (event.keyCode) {
-            case LEFT_KEY_CODE:
-                socket.emit("keyPress", { inputId: "left", state: false });
-                break;
-            case UP_KEY_CODE:
-                socket.emit("keyPress", { inputId: "up", state: false });
-                break;
-            case RIGHT_KEY_CODE:
-                socket.emit("keyPress", { inputId: "right", state: false });
-                break;
-            case DOWN_KEY_CODE:
-                socket.emit("keyPress", { inputId: "down", state: false });
-                break;
+        if (event.keyCode === LEFT_KEY_CODE || event.keyCode === A_KEY_CODE) {
+            socket.emit("keyPress", { inputId: "left", state: false });
+        }
+        if (event.keyCode === UP_KEY_CODE || event.keyCode === W_KEY_CODE) {
+            socket.emit("keyPress", { inputId: "up", state: false });
+        }
+        if (event.keyCode === RIGHT_KEY_CODE || event.keyCode === D_KEY_CODE) {
+            socket.emit("keyPress", { inputId: "right", state: false });
+        }
+        if (event.keyCode === DOWN_KEY_CODE || event.keyCode === S_KEY_CODE) {
+            socket.emit("keyPress", { inputId: "down", state: false });
         }
     };
 
     var ctx = document.getElementById("ctx").getContext("2d");
     ctx.font = "30px Arial";
 
-    socket.on("newPositions", function (data) {
-        ctx.clearRect(0, 0, 1300, 600);
-        for (let i = 0; i < data.length; i++) {
-            ctx.fillText(":)", data[i].x, data[i].y);
-        }
+    socket.on("newPlayerPositions", function (data) {
+        playerList = data;
     });
+
+    socket.on("newProjectilePositions", function (data) {
+        projectileDict = data;
+    });
+
+    socket.on("yourPlayerId", function (id) {
+        myPlayer.id = id;
+    });
+
+    let updatePlayers = function () {
+        for (let i = 0; i < playerList.length; i++) {
+            ctx.fillText(":)", playerList[i].x, playerList[i].y);
+
+            if (playerList[i].id === myPlayer.id) {
+                myPlayer.x = playerList[i].x;
+                myPlayer.y = playerList[i].y;
+            }
+        }
+    };
+
+    let updateProjectiles = function () {
+        console.log(projectileDict);
+        for (let i in projectileDict) {
+
+            ctx.fillText("*", projectileDict[i].x, projectileDict[i].y);
+        }
+    };
+
+    setInterval(function () {
+        ctx.clearRect(0, 0, 1300, 600);
+
+        updatePlayers();
+        updateProjectiles();
+    }, 1000 / 60);
 
 </script>
