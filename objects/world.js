@@ -59,17 +59,17 @@ let checkProjectileHitBoxHeart = function (index) {
 let generateHearts = function (numPlayers) {
     switch (numPlayers) {
         case 2:
-            world.heartDict[Math.random()] = {
+            world.heartDict["1"] = {
                 x: 850,
                 y: 400,
                 health: 3
             };
-            world.heartDict[Math.random()] = {
+            world.heartDict["2"] = {
                 x: 1025,
                 y: 400,
                 health: 3
             };
-            world.heartDict[Math.random()] = {
+            world.heartDict["3"] = {
                 x: 1200,
                 y: 400,
                 health: 3

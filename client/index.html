@@ -92,8 +92,13 @@
         heartDict = heartDictGiven;
     });
 
-    socket.on("heartHit", function (id) {
-        heartDict[id].health--;
+    socket.on("heartHitList", function (heartHitList) {
+        for (let i = 0; i < heartHitList.length; i++) {
+            let index = heartHitList[i];
+            if (heartDict[index].health > 0) {
+                heartDict[index].health--;
+            }
+        }
     });
 
     let drawFace = function (player) {
@@ -114,7 +119,7 @@
 
     let drawHearts = function () {
         for (let i in heartDict) {
-            if (heartDict[i].health) {
+            if (heartDict[i].health > 0) {
                 ctx.fillText(heartDict[i].health, heartDict[i].x, heartDict[i].y);
             }
         }

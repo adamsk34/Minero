@@ -11,7 +11,7 @@ app.get('/', function (req, res) {
 app.use("/client", express.static(__dirname + "/client"));
 
 serv.listen(2000);
-console.log("Server started");
+console.log("Server started at port 2000");
 
 let socketDict = {};
 let w = require("./objects/world");
@@ -128,7 +128,7 @@ io.sockets.on("connection", function (socket) {
 });
 
 setInterval(function () {
-    let heartId;
+    let heartHitList = [];
 
     for (let i in w.playerDict) {
         w.playerDict[i].updatePosition();
@@ -137,15 +137,15 @@ setInterval(function () {
     w.moveProjectiles();
     for (let i in w.projectileDict) {
         w.checkProjectileHitBoxPlayer(i);
-        heartId = w.checkProjectileHitBoxHeart(i);
+        heartHitList.push(w.checkProjectileHitBoxHeart(i));
     }
 
     for (let i in socketDict) {
         let socket = socketDict[i];
         socket.emit("newPlayerPositions", w.playerDict);
         socket.emit("newProjectilePositions", w.projectileDict);
-        if (heartId) {
-            socket.emit("heartHit", heartId);
+        if (heartHitList.length > 0) {
+            socket.emit("heartHitList", heartHitList);
         }
     }
 }, 1000 / 160);
