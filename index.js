@@ -16,6 +16,32 @@ console.log("Server started");
 let socketDict = {};
 let playerDict = {};
 let projectileDict = {};
+let numPlayers = 0;
+
+let stayInBounds = function (player) {
+    switch (player.team) {
+        case 1:
+            if (player.x < 50) {
+                player.x = 50;
+            } else if (player.x > 500) {
+                player.x = 500;
+            }
+            player.y = 450;
+            break;
+        case 2:
+            if (player.x < 700) {
+                player.x = 700;
+            } else if (player.x > 1250) {
+                player.x = 1250;
+            }
+            if (player.y < 50) {
+                player.y = 50;
+            } else if (player.y > 550) {
+                player.y = 550;
+            }
+            break;
+    }
+};
 
 let Player = function (id) {
     let self = {
@@ -26,7 +52,8 @@ let Player = function (id) {
         pressingUp: false,
         pressingRight: false,
         pressingDown: false,
-        speed: 8
+        speed: 8,
+        team: 1 + (numPlayers % 2)
     };
     self.updatePosition = function () {
         let xChange = 0;
@@ -47,23 +74,30 @@ let Player = function (id) {
             xChange *= 0.70710678119;
             yChange *= 0.70710678119;
         }
+
         self.x += xChange;
         self.y += yChange;
+
+        stayInBounds(self);
     };
     return self;
 };
 
 let io = socketIO(serv, {});
 io.sockets.on("connection", function (socket) {
+    let player;
     socket.id = Math.random();
     socketDict[socket.id] = socket;
 
-    let player = Player(socket.id);
+    player = Player(socket.id);
+    numPlayers++;
     playerDict[socket.id] = player;
 
     socket.emit("yourPlayerId", socket.id);
+    socket.emit("yourPlayerTeam", player.team);
 
     socket.on("disconnect", function () {
+        numPlayers--;
         delete socketDict[socket.id];
         delete playerDict[socket.id];
     });
@@ -117,20 +151,14 @@ let moveProjectiles = function () {
 setInterval(function () {
     let playerPack = [];
     for (let i in playerDict) {
-        let player = playerDict[i];
-        player.updatePosition();
-        playerPack.push({
-            x: player.x,
-            y: player.y,
-            id: player.id
-        });
+        playerDict[i].updatePosition();
     }
 
     moveProjectiles();
 
     for (let i in socketDict) {
         let socket = socketDict[i];
-        socket.emit("newPlayerPositions", playerPack);
+        socket.emit("newPlayerPositions", playerDict);
         socket.emit("newProjectilePositions", projectileDict);
     }
 }, 1000 / 60);
