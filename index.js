@@ -14,34 +14,7 @@ serv.listen(2000);
 console.log("Server started");
 
 let socketDict = {};
-let playerDict = {};
-let projectileDict = {};
-let numPlayers = 0;
-
-let stayInBounds = function (player) {
-    switch (player.team) {
-        case 1:
-            if (player.x < 50) {
-                player.x = 50;
-            } else if (player.x > 500) {
-                player.x = 500;
-            }
-            player.y = 450;
-            break;
-        case 2:
-            if (player.x < 700) {
-                player.x = 700;
-            } else if (player.x > 1250) {
-                player.x = 1250;
-            }
-            if (player.y < 50) {
-                player.y = 50;
-            } else if (player.y > 550) {
-                player.y = 550;
-            }
-            break;
-    }
-};
+let w = require("./objects/world");
 
 let Player = function (id) {
     let self = {
@@ -53,7 +26,7 @@ let Player = function (id) {
         pressingRight: false,
         pressingDown: false,
         speed: 8,
-        team: 1 + (numPlayers % 2)
+        team: 1 + (Object.keys(w.playerDict).length % 2)
     };
     self.updatePosition = function () {
         let xChange = 0;
@@ -78,7 +51,31 @@ let Player = function (id) {
         self.x += xChange;
         self.y += yChange;
 
-        stayInBounds(self);
+        self.stayInBounds();
+    };
+    self.stayInBounds = function (player) {
+        switch (self.team) {
+            case 1:
+                if (self.x < 50) {
+                    self.x = 50;
+                } else if (self.x > 500) {
+                    self.x = 500;
+                }
+                self.y = 450;
+                break;
+            case 2:
+                if (self.x < 700) {
+                    self.x = 700;
+                } else if (self.x > 1250) {
+                    self.x = 1250;
+                }
+                if (self.y < 50) {
+                    self.y = 50;
+                } else if (self.y > 550) {
+                    self.y = 550;
+                }
+                break;
+        }
     };
     return self;
 };
@@ -90,16 +87,19 @@ io.sockets.on("connection", function (socket) {
     socketDict[socket.id] = socket;
 
     player = Player(socket.id);
-    numPlayers++;
-    playerDict[socket.id] = player;
+    w.playerDict[socket.id] = player;
+
+    if (Object.keys(w.playerDict).length == 1) {
+        w.generateHearts(2);// TODO: # players should be know from the start
+    }
 
     socket.emit("yourPlayerId", socket.id);
     socket.emit("yourPlayerTeam", player.team);
+    socket.emit("heartDict", w.heartDict);
 
     socket.on("disconnect", function () {
-        numPlayers--;
         delete socketDict[socket.id];
-        delete playerDict[socket.id];
+        delete w.playerDict[socket.id];
     });
 
     socket.on("keyPress", function (data) {
@@ -122,43 +122,30 @@ io.sockets.on("connection", function (socket) {
     socket.on("shootProjectile", function (data) {
         let projId = Math.random();
 
-        projectileDict[projId] = data;
-        removeProjectiles();
+        w.projectileDict[projId] = data;
+        w.removeProjectiles();
     });
 });
 
-let removeProjectiles = function () {
-    let oobProjList = [];
-    for (let i in projectileDict) {
-        if (projectileDict[i].x < -5 || projectileDict[i].x > 1305 || projectileDict[i].y < -5 || projectileDict[i].y > 605) {
-            oobProjList.push(i);
-        }
-    }
-    for (let i in oobProjList) {
-        delete projectileDict[oobProjList[i]];
-    }
-};
-
-let moveProjectiles = function () {
-    for (let i in projectileDict) {
-        projectileDict[i].x += projectileDict[i].xVelocity;
-        projectileDict[i].y += projectileDict[i].yVelocity;
-
-        projectileDict[i].yVelocity += 0.5;
-    }
-};
-
 setInterval(function () {
-    let playerPack = [];
-    for (let i in playerDict) {
-        playerDict[i].updatePosition();
+    let heartId;
+
+    for (let i in w.playerDict) {
+        w.playerDict[i].updatePosition();
     }
 
-    moveProjectiles();
+    w.moveProjectiles();
+    for (let i in w.projectileDict) {
+        w.checkProjectileHitBoxPlayer(i);
+        heartId = w.checkProjectileHitBoxHeart(i);
+    }
 
     for (let i in socketDict) {
         let socket = socketDict[i];
-        socket.emit("newPlayerPositions", playerDict);
-        socket.emit("newProjectilePositions", projectileDict);
+        socket.emit("newPlayerPositions", w.playerDict);
+        socket.emit("newProjectilePositions", w.projectileDict);
+        if (heartId) {
+            socket.emit("heartHit", heartId);
+        }
     }
-}, 1000 / 60);
+}, 1000 / 160);
