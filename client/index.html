@@ -14,6 +14,7 @@
     let socket = io();
     let playerList = [];
     let projectileDict = {};
+    let mouthOpenFrames = 0;
 
     document.body.onmousedown = function (event) {
         let xDirection = (event.x - myPlayer.x);// = 100
@@ -23,6 +24,8 @@
 
         let newXVel = xVel * (1 + 0.2 * (1.5 - Math.abs(Math.abs(xVel) - Math.abs(yVel))));
         let newYVel = yVel * (1 + 0.2 * (1.5 - Math.abs(Math.abs(xVel) - Math.abs(yVel))));
+
+        mouthOpenFrames = 15;
 
         socket.emit("shootProjectile", {
             x: myPlayer.x,
@@ -79,7 +82,12 @@
 
     let updatePlayers = function () {
         for (let i = 0; i < playerList.length; i++) {
-            ctx.fillText(":)", playerList[i].x, playerList[i].y);
+            if (playerList[i].id === myPlayer.id && mouthOpenFrames > 0) {
+                mouthOpenFrames--;
+                ctx.fillText(":o", playerList[i].x, playerList[i].y);
+            } else {
+                ctx.fillText(":)", playerList[i].x, playerList[i].y);
+            }
 
             if (playerList[i].id === myPlayer.id) {
                 myPlayer.x = playerList[i].x;
