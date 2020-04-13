@@ -29,7 +29,7 @@ let Player = function (id) {
         pressingUp: false,
         pressingRight: false,
         pressingDown: false,
-        speed: 3,
+        speed: 2,
         team: (Object.keys(w.playerDict).length % 2)
     };
     self.updatePosition = function () {
@@ -60,8 +60,8 @@ let Player = function (id) {
     self.stayInBounds = function (player) {
         switch (self.team) {
             case 0:
-                if (self.x < 50) {
-                    self.x = 50;
+                if (self.x < 100) {
+                    self.x = 100;
                 } else if (self.x > 500) {
                     self.x = 500;
                 }

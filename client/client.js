@@ -16,7 +16,7 @@ let mousePosition = { x: 500, y: 200 }
 let scores = [0, 0];
 let mouseDown = 0;
 let mouseDownTicks = 0;
-let ticksBetweenShots = 60;
+let ticksBetweenShots = 200;
 
 let getProjectileVelocityXY = function () {
     let xDirection = (mousePosition.x - myPlayer.x);
@@ -28,8 +28,16 @@ let getProjectileVelocityXY = function () {
     let newXVel = xVel * (1 + 0.2 * (speed - Math.abs(Math.abs(xVel) - Math.abs(yVel))));
     let newYVel = yVel * (1 + 0.2 * (speed - Math.abs(Math.abs(xVel) - Math.abs(yVel))));
 
-    return { xVelocity: 14 * newXVel, yVelocity: -14 * newYVel };
+    return { xVelocity: 10 * newXVel, yVelocity: -10 * newYVel };
 }
+
+// TODO: reference world.js so that this function is not duplicated
+let moveProjectile = function (projectile) {
+    projectile.x += projectile.xVelocity;
+    projectile.y += projectile.yVelocity;
+
+    projectile.yVelocity += 0.055;
+};
 
 document.body.onmousedown = function (event) {
     mouseDown++;
@@ -156,14 +164,6 @@ let drawProjectiles = function () {
 
         ctx.fillText("*", projectileDict[i].x, projectileDict[i].y);
     }
-};
-
-// TODO: reference world.js so that this function is not duplicated
-let moveProjectile = function (projectile) {
-    projectile.x += projectile.xVelocity;
-    projectile.y += projectile.yVelocity;
-
-    projectile.yVelocity += 0.11;
 };
 
 let euclideanDist = function (object1, object2) {

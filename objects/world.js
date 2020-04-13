@@ -14,7 +14,7 @@ let moveProjectile = function (projectile) {
     projectile.x += projectile.xVelocity;
     projectile.y += projectile.yVelocity;
 
-    projectile.yVelocity += 0.11;
+    projectile.yVelocity += 0.055;
 };
 
 let moveProjectiles = function (projectileDict) {
