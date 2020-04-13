@@ -12,12 +12,15 @@ let socket = io();
 let playerDict;
 let projectileDict;
 let mouthOpenFrames = 0;
-let mousePosition = { x: 0, y: 0 }
+let mousePosition = { x: 500, y: 200 }
 let scores = [0, 0];
+let mouseDown = 0;
+let mouseDownTicks = 0;
+let ticksBetweenShots = 60;
 
-let getProjectileVelocityXY = function (cursor) {
-    let xDirection = (cursor.x - myPlayer.x);
-    let yDirection = (cursor.y - myPlayer.y);
+let getProjectileVelocityXY = function () {
+    let xDirection = (mousePosition.x - myPlayer.x);
+    let yDirection = (mousePosition.y - myPlayer.y);
     let speed = 0.8;
     let xVel = speed * xDirection / (Math.abs(xDirection) + Math.abs(yDirection));
     let yVel = -speed * yDirection / (Math.abs(xDirection) + Math.abs(yDirection));
@@ -29,16 +32,15 @@ let getProjectileVelocityXY = function (cursor) {
 }
 
 document.body.onmousedown = function (event) {
-    if (myPlayer.team == 0) {
-        mouthOpenFrames = 15;
+    mouseDown++;
+    mousePosition.x = event.x;
+    mousePosition.y = event.y;
+};
 
-        socket.emit("shootProjectile", {
-            x: myPlayer.x,
-            y: myPlayer.y,
-            xVelocity: getProjectileVelocityXY(event).xVelocity,
-            yVelocity: getProjectileVelocityXY(event).yVelocity
-        });
-    }
+document.body.onmouseup = function (event) {
+    mouseDown--;
+    mousePosition.x = event.x;
+    mousePosition.y = event.y;
 };
 
 document.onkeydown = function (event) {
@@ -196,8 +198,36 @@ let drawScores = function () {
     ctx.fillText(scores[1], 1000, 50);
 };
 
+let shootHandler = function () {
+    if (mouseDownTicks == 0) {
+        mouseDownTicks++;
+
+        if (myPlayer.team == 0) {
+            mouthOpenFrames = 15;
+
+            socket.emit("shootProjectile", {
+                x: myPlayer.x,
+                y: myPlayer.y,
+                xVelocity: getProjectileVelocityXY(mousePosition).xVelocity,
+                yVelocity: getProjectileVelocityXY(mousePosition).yVelocity
+            });
+        }
+    }
+};
+
 setInterval(function () {
     ctx.clearRect(0, 0, 1300, 600);
+
+    if (mouseDown) {
+        shootHandler();
+    }
+
+    if (mouseDownTicks > 0) {
+        mouseDownTicks++;
+        if (mouseDownTicks == ticksBetweenShots) {
+            mouseDownTicks = 0;
+        }
+    }
 
     drawScores();
     drawPlayers();
