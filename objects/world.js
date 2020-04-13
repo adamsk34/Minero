@@ -111,13 +111,7 @@ let world = {
     checkIfTouching: checkIfTouching,
     playerDict: {},
     projectileDict: {},
-    heartDict: {},
-    hello: "hello"
+    heartDict: {}
 };
 
-// exporting is node and browser safe
-try {
-    window.world = world;
-} catch (e) {
-    module.exports = { world: world };
-}
+module.exports = world;

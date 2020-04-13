@@ -1,5 +1,3 @@
-import * as w from "../world.js";
-
 const LEFT_KEY_CODE = 37;
 const UP_KEY_CODE = 38;
 const RIGHT_KEY_CODE = 39;

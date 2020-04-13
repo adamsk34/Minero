@@ -1,5 +1,5 @@
 let assert = require("assert");
-let w = require("../../shared/world.js").world;
+let w = require("../../objects/world");
 
 describe("Unit", function () {
     describe("generateHeartDict()", function () {
