@@ -6,15 +6,15 @@ let app = express();
 let serv = http.Server(app);
 
 app.get('/', function (req, res) {
-    res.sendFile(__dirname + "/client/index.html");
+    res.sendFile(__dirname + "/shared/client/index.html");
 });
-app.use("/client", express.static(__dirname + "/client"));
+app.use("/shared", express.static(__dirname + "/shared"));
 
 serv.listen(2000);
 console.log("Server started at port 2000");
 
 let socketDict = {};
-let w = require("./objects/world");
+let w = require("./shared/world").world;
 
 w.heartDict = w.generateHeartDict(2);// TODO: # players should be know from the start
 
