@@ -30,7 +30,7 @@ let Player = function (id) {
         pressingRight: false,
         pressingDown: false,
         speed: 3,
-        team: 1 + (Object.keys(w.playerDict).length % 2)
+        team: (Object.keys(w.playerDict).length % 2)
     };
     self.updatePosition = function () {
         let xChange = 0;
@@ -59,7 +59,7 @@ let Player = function (id) {
     };
     self.stayInBounds = function (player) {
         switch (self.team) {
-            case 1:
+            case 0:
                 if (self.x < 50) {
                     self.x = 50;
                 } else if (self.x > 500) {
@@ -67,14 +67,14 @@ let Player = function (id) {
                 }
                 self.y = 450;
                 break;
-            case 2:
+            case 1:
                 if (self.x < 700) {
                     self.x = 700;
                 } else if (self.x > 1250) {
                     self.x = 1250;
                 }
-                if (self.y < 50) {
-                    self.y = 50;
+                if (self.y < 100) {
+                    self.y = 100;
                 } else if (self.y > 550) {
                     self.y = 550;
                 }
@@ -96,6 +96,7 @@ io.sockets.on("connection", function (socket) {
     socket.emit("yourPlayerId", socket.id);
     socket.emit("yourPlayerTeam", player.team);
     socket.emit("heartDict", w.heartDict);
+    socket.emit("newScores", w.scores);
 
     socket.on("disconnect", function () {
         delete socketDict[socket.id];
@@ -131,6 +132,8 @@ io.sockets.on("connection", function (socket) {
 
 setInterval(function () {
     let heartHitList = [];
+    let heartId;
+    let newScores = false;
 
     for (let i in w.playerDict) {
         w.playerDict[i].updatePosition();
@@ -139,7 +142,20 @@ setInterval(function () {
     w.moveProjectiles(w.projectileDict);
     for (let i in w.projectileDict) {
         w.checkProjectileHitBoxAllPlayers(i);
-        heartHitList.push(w.checkProjectileHitBoxAllHearts(i));
+        heartId = w.checkProjectileHitBoxAllHearts(i);
+        if (heartId) {
+            heartHitList.push(heartId);
+            delete w.projectileDict[i];
+        }
+    }
+
+    for (let i in heartHitList) {
+        w.heartDict[heartHitList[i]].health--;
+        if (w.heartDict[heartHitList[i]].health == 0) {
+            w.heartDict[heartHitList[i]].health = 3;
+            w.scores[0]++;
+            newScores = true;
+        }
     }
 
     for (let i in socketDict) {
@@ -148,6 +164,9 @@ setInterval(function () {
         socket.emit("newProjectilePositions", w.projectileDict);
         if (heartHitList.length > 0) {
             socket.emit("heartHitList", heartHitList);
+        }
+        if (newScores) {
+            socket.emit("newScores", w.scores);
         }
     }
 }, 1000 / 160);

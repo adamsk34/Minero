@@ -30,7 +30,7 @@ let checkProjectileHitBoxAllPlayers = function (index) {
     if (projectile) {
         for (let i in world.playerDict) {
             let player = world.playerDict[i];
-            if (checkIfTouching(projectile, player) && player.team == 2) {
+            if (checkIfTouching(projectile, player) && player.team == 1) {
                 playerId = i;
                 delete world.projectileDict[index];
             }
@@ -59,8 +59,6 @@ let checkProjectileHitBoxAllHearts = function (index) {
             let heart = world.heartDict[i];
             if (checkIfTouching(projectile, heart) && heart.health > 0) {
                 heartId = i;
-                heart.health--;
-                delete world.projectileDict[index];
             }
         }
     }
@@ -109,6 +107,7 @@ let world = {
     checkProjectileHitBoxAllPlayers: checkProjectileHitBoxAllPlayers,
     generateHeartDict: generateHeartDict,
     checkIfTouching: checkIfTouching,
+    scores: [0, 0],
     playerDict: {},
     projectileDict: {},
     heartDict: {}

@@ -13,6 +13,7 @@ let playerDict;
 let projectileDict;
 let mouthOpenFrames = 0;
 let mousePosition = { x: 0, y: 0 }
+let scores = [0, 0];
 
 let getProjectileVelocityXY = function (cursor) {
     let xDirection = (cursor.x - myPlayer.x);
@@ -28,7 +29,7 @@ let getProjectileVelocityXY = function (cursor) {
 }
 
 document.body.onmousedown = function (event) {
-    if (myPlayer.team == 1) {
+    if (myPlayer.team == 0) {
         mouthOpenFrames = 15;
 
         socket.emit("shootProjectile", {
@@ -108,33 +109,37 @@ socket.on("heartDict", function (heartDictGiven) {// TODO: heartDictGiven should
 socket.on("heartHitList", function (heartHitList) {
     for (let i = 0; i < heartHitList.length; i++) {
         let index = heartHitList[i];
-        if (heartDict[index].health > 0) {
-            heartDict[index].health--;
+
+        heartDict[index].health--;
+        if (heartDict[index].health == 0) {
+            heartDict[index].health = 3;
         }
     }
 });
 
+socket.on("newScores", function (scoresGiven) {
+    scores = scoresGiven;
+});
+
 let drawFace = function (player) {
-    if (player.team == 1) {
+    if (player.team == 0) {
         if (player.id === myPlayer.id && mouthOpenFrames > 0) {
             mouthOpenFrames--;
             ctx.fillText(":o", player.x, player.y);
         } else {
             ctx.fillText(":)", player.x, player.y);
         }
-    } else if (player.team == 2) {
+    } else if (player.team == 1) {
         ctx.fillText("_", player.x - 5, player.y - 35);
         ctx.fillText(":)", player.x, player.y);
     } else {
-        console.error("Player team should be 1 or 2 (player.team ===", player.team + ")");
+        console.error("Player team should be 0 or 1 (player.team ===", player.team + ")");
     }
 };
 
 let drawHearts = function () {
     for (let i in heartDict) {
-        if (heartDict[i].health > 0) {
-            ctx.fillText(heartDict[i].health, heartDict[i].x, heartDict[i].y);
-        }
+        ctx.fillText(heartDict[i].health, heartDict[i].x, heartDict[i].y);
     }
 };
 
@@ -186,19 +191,19 @@ let drawArc = function () {
     }
 };
 
+let drawScores = function () {
+    ctx.fillText(scores[0], 300, 50);
+    ctx.fillText(scores[1], 1000, 50);
+};
+
 setInterval(function () {
     ctx.clearRect(0, 0, 1300, 600);
 
-    // draw divider
-    ctx.fillText("|", 650, 366);
-    ctx.fillText("|", 650, 394);
-    ctx.fillText("|", 650, 422);
-    ctx.fillText("|", 650, 450);
-
+    drawScores();
     drawPlayers();
     drawProjectiles();
     drawHearts();
-    if (myPlayer.team == 1) {
+    if (myPlayer.team == 0) {
         drawArc();
     }
 }, 1000 / 160);
