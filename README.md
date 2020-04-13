@@ -26,3 +26,7 @@ yarn run test
 ## technologies
 * node (version 12.16)
 * yarn (version 1.21)
+
+## Author
+
+This work was written in whole by Kevin Adams, for contact you can reach Kevin at KevinAdamsDev@gmail.com
