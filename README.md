@@ -23,7 +23,7 @@ Use the following command to run all tests:
 yarn run test
 ```
 
-## technologies
+## Technologies
 * node (version 12.16)
 * yarn (version 1.21)
 
