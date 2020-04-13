@@ -13,6 +13,7 @@ app.use("/client", express.static(__dirname + "/client"));
 serv.listen(2000);
 console.log("Server started at port 2000");
 
+const heartTicksDead = 650;
 let socketDict = {};
 let w = require("./objects/world");
 
@@ -132,6 +133,7 @@ io.sockets.on("connection", function (socket) {
 
 setInterval(function () {
     let heartHitList = [];
+    let heartRestartList = [];
     let heartId;
     let newScores = false;
 
@@ -149,12 +151,29 @@ setInterval(function () {
         }
     }
 
+    // check health
     for (let i in heartHitList) {
         w.heartDict[heartHitList[i]].health--;
+    }
+
+    // check scores
+    for (let i in heartHitList) {
         if (w.heartDict[heartHitList[i]].health == 0) {
-            w.heartDict[heartHitList[i]].health = 3;
+            // w.heartDict[heartHitList[i]].health = 3;
+            w.heartDict[heartHitList[i]].ticksUntilRestart = heartTicksDead;
             w.scores[0]++;
             newScores = true;
+        }
+    }
+
+    // count ticks while hearts before they restart
+    for (let i in w.heartDict) {
+        if (w.heartDict[i].ticksUntilRestart > 0) {
+            w.heartDict[i].ticksUntilRestart--;
+            if (w.heartDict[i].ticksUntilRestart == 0) {
+                w.heartDict[i].health = 3;
+                heartRestartList.push(i);
+            }
         }
     }
 
@@ -164,6 +183,9 @@ setInterval(function () {
         socket.emit("newProjectilePositions", w.projectileDict);
         if (heartHitList.length > 0) {
             socket.emit("heartHitList", heartHitList);
+        }
+        if (heartRestartList.length > 0) {
+            socket.emit("heartRestartList", heartRestartList);
         }
         if (newScores) {
             socket.emit("newScores", w.scores);

@@ -77,21 +77,24 @@ let generateHeartDict = function (numPlayers) {
                 y: 400,
                 width: 40,
                 height: 40,
-                health: 3
+                health: 3,
+                ticksUntilRestart: 0
             };
             heartDict["2"] = {
                 x: 975,
                 y: 400,
                 width: 40,
                 height: 40,
-                health: 3
+                health: 3,
+                ticksUntilRestart: 0
             };
             heartDict["3"] = {
                 x: 1100,
                 y: 400,
                 width: 40,
                 height: 40,
-                health: 3
+                health: 3,
+                ticksUntilRestart: 0
             };
             break;
     }

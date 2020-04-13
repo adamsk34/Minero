@@ -20,6 +20,7 @@ describe("Unit", function () {
                 assert(heartDict[i].width);
                 assert(heartDict[i].height);
                 assert.equal(heartDict[i].health, 3);
+                assert.equal(heartDict[i].ticksUntilRestart, 0);
             }
         });
     });

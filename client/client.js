@@ -120,9 +120,19 @@ socket.on("heartHitList", function (heartHitList) {
     for (let i = 0; i < heartHitList.length; i++) {
         let index = heartHitList[i];
 
-        heartDict[index].health--;
-        if (heartDict[index].health == 0) {
-            heartDict[index].health = 3;
+        if (heartDict[index].health > 0) {
+            heartDict[index].health--;
+        }
+    }
+});
+
+socket.on("heartRestartList", function (heartRestartList) {
+    for (let i in heartRestartList) {
+        let currHeart = heartDict[heartRestartList[i]];
+        if (currHeart.health == 0) {
+            currHeart.health = 3;
+        } else {
+            console.error("ERROR: Cannot restart heart whose health is not 0 (health =", currHeart.health + ")");
         }
     }
 });
@@ -143,13 +153,15 @@ let drawFace = function (player) {
         ctx.fillText("_", player.x - 5, player.y - 35);
         ctx.fillText(":)", player.x, player.y);
     } else {
-        console.error("Player team should be 0 or 1 (player.team ===", player.team + ")");
+        console.error("ERROR: Player team should be 0 or 1 (player.team ===", player.team + ")");
     }
 };
 
 let drawHearts = function () {
     for (let i in heartDict) {
-        ctx.fillText(heartDict[i].health, heartDict[i].x, heartDict[i].y);
+        if (heartDict[i].health) {
+            ctx.fillText(heartDict[i].health, heartDict[i].x, heartDict[i].y);
+        }
     }
 };
 
