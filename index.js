@@ -28,14 +28,19 @@ app.get('/', function (req, res) {
 });
 app.use("/client", express.static(__dirname + "/client"));
 
-serv.listen(2000);
-console.log("Server started at port 2000");
+serv.listen(2000, function (error) {
+    if (error) {
+        console.error("ERROR: Something went wrong", error);
+    } else {
+        console.log("Server started at port 2000");
+    }
+});
 
 const heartTicksDead = 650;
 let socketDict = {};
 let w = require("./objects/world");
 
-w.heartDict = w.generateHeartDict(2);// TODO: # players should be know from the start
+w.heartDict = w.generateHeartDict(2);// TODO: # of players should be known from the start
 
 let Player = function (id) {
     let self = {
