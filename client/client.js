@@ -16,6 +16,8 @@
     You should have received a copy of the GNU General Public License
     along with Minero.  If not, see <https://www.gnu.org/licenses/>.
 */
+import * as art from "./art.js";
+
 const LEFT_KEY_CODE = 37;
 const UP_KEY_CODE = 38;
 const RIGHT_KEY_CODE = 39;
@@ -24,21 +26,23 @@ const A_KEY_CODE = 65;
 const W_KEY_CODE = 87;
 const D_KEY_CODE = 68;
 const S_KEY_CODE = 83;
-let myPlayer = {};
+let myPlayer = {
+    mouthOpenFrames: 0
+};
 let heartDict = {};
 let socket = io();
 let playerDict;
 let projectileDict;
-let mouthOpenFrames = 0;
 let mousePosition = { x: 500, y: 200 }
 let scores = [0, 0];
 let mouseDown = 0;
 let mouseDownTicks = 0;
 let ticksBetweenShots = 200;
 
-let getProjectileVelocityXY = function () {
-    let xDirection = (mousePosition.x - myPlayer.x);
-    let yDirection = (mousePosition.y - myPlayer.y);
+// TODO: move to utility file
+let getProjectileVelocityXY = function (shooterPosition, mousePosition) {
+    let xDirection = (mousePosition.x - shooterPosition.x);
+    let yDirection = (mousePosition.y - shooterPosition.y);
     let speed = 0.8;
     let xVel = speed * xDirection / (Math.abs(xDirection) + Math.abs(yDirection));
     let yVel = -speed * yDirection / (Math.abs(xDirection) + Math.abs(yDirection));
@@ -47,14 +51,6 @@ let getProjectileVelocityXY = function () {
     let newYVel = yVel * (1 + 0.2 * (speed - Math.abs(Math.abs(xVel) - Math.abs(yVel))));
 
     return { xVelocity: 10 * newXVel, yVelocity: -10 * newYVel };
-}
-
-// TODO: reference world.js so that this function is not duplicated
-let moveProjectile = function (projectile) {
-    projectile.x += projectile.xVelocity;
-    projectile.y += projectile.yVelocity;
-
-    projectile.yVelocity += 0.055;
 };
 
 document.body.onmousedown = function (event) {
@@ -104,8 +100,7 @@ window.addEventListener("mousemove", function (event) {
     mousePosition.y = event.y;
 });
 
-var ctx = document.getElementById("ctx").getContext("2d");
-ctx.font = "30px Arial";
+let ctx = document.getElementById("ctx").getContext("2d");
 
 socket.on("newPlayerPositions", function (data) {
     playerDict = data;
@@ -159,87 +154,18 @@ socket.on("newScores", function (scoresGiven) {
     scores = scoresGiven;
 });
 
-let drawFace = function (player) {
-    if (player.team == 0) {
-        if (player.id === myPlayer.id && mouthOpenFrames > 0) {
-            mouthOpenFrames--;
-            ctx.fillText(":o", player.x, player.y);
-        } else {
-            ctx.fillText(":)", player.x, player.y);
-        }
-    } else if (player.team == 1) {
-        ctx.fillText("_", player.x - 5, player.y - 35);
-        ctx.fillText(":)", player.x, player.y);
-    } else {
-        console.error("ERROR: Player team should be 0 or 1 (player.team ===", player.team + ")");
-    }
-};
-
-let drawHearts = function () {
-    for (let i in heartDict) {
-        if (heartDict[i].health) {
-            ctx.fillText(heartDict[i].health, heartDict[i].x, heartDict[i].y);
-        }
-    }
-};
-
-let drawPlayers = function () {
-    for (let i in playerDict) {
-        drawFace(playerDict[i]);
-    }
-};
-
-let drawProjectiles = function () {
-    for (let i in projectileDict) {
-
-        ctx.fillText("*", projectileDict[i].x, projectileDict[i].y);
-    }
-};
-
-let euclideanDist = function (object1, object2) {
-    return Math.sqrt((Math.pow(object1.x - object2.x, 2)) + (Math.pow(object1.y - object2.y, 2)));
-}
-
-let drawArc = function () {
-    let pointsToDraw = 30;
-    let dotDist = 50;
-    let imaginaryProjectile = {
-        x: myPlayer.x,
-        y: myPlayer.y,
-        xVelocity: getProjectileVelocityXY(mousePosition).xVelocity,
-        yVelocity: getProjectileVelocityXY(mousePosition).yVelocity
-    };
-    let prevDot = { x: myPlayer.x, y: myPlayer.y };
-
-    while (pointsToDraw > 0) {
-        let eDist = 0;
-        while (eDist < dotDist) {
-            moveProjectile(imaginaryProjectile);
-            eDist = euclideanDist(imaginaryProjectile, prevDot);
-        }
-        ctx.fillText(".", imaginaryProjectile.x, imaginaryProjectile.y - 14);
-        prevDot = { x: imaginaryProjectile.x, y: imaginaryProjectile.y };
-        pointsToDraw--;
-    }
-};
-
-let drawScores = function () {
-    ctx.fillText(scores[0], 300, 50);
-    ctx.fillText(scores[1], 1000, 50);
-};
-
 let shootHandler = function () {
     if (mouseDownTicks == 0) {
         mouseDownTicks++;
 
         if (myPlayer.team == 0) {
-            mouthOpenFrames = 15;
+            myPlayer.mouthOpenFrames = 15;
 
             socket.emit("shootProjectile", {
                 x: myPlayer.x,
                 y: myPlayer.y,
-                xVelocity: getProjectileVelocityXY(mousePosition).xVelocity,
-                yVelocity: getProjectileVelocityXY(mousePosition).yVelocity
+                xVelocity: getProjectileVelocityXY(myPlayer, mousePosition).xVelocity,
+                yVelocity: getProjectileVelocityXY(myPlayer, mousePosition).yVelocity
             });
         }
     }
@@ -259,11 +185,11 @@ setInterval(function () {
         }
     }
 
-    drawScores();
-    drawPlayers();
-    drawProjectiles();
-    drawHearts();
+    art.drawScores(scores);
+    art.drawPlayers(playerDict, myPlayer);
+    art.drawProjectiles(projectileDict);
+    art.drawHearts(heartDict);
     if (myPlayer.team == 0) {
-        drawArc();
+        art.drawArc(myPlayer, mousePosition);
     }
 }, 1000 / 160);

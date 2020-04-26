@@ -19,6 +19,7 @@
 let express = require("express");
 let http = require("http");
 let socketIO = require("socket.io");
+let Player = require("./objects/player");
 
 let app = express();
 let serv = http.Server(app);
@@ -42,79 +43,13 @@ let w = require("./objects/world");
 
 w.heartDict = w.generateHeartDict(2);// TODO: # of players should be known from the start
 
-let Player = function (id) {
-    let self = {
-        x: 250,
-        y: 250,
-        width: 50,
-        height: 50,
-        id: id,
-        pressingLeft: false,
-        pressingUp: false,
-        pressingRight: false,
-        pressingDown: false,
-        speed: 2,
-        team: (Object.keys(w.playerDict).length % 2)
-    };
-    self.updatePosition = function () {
-        let xChange = 0;
-        let yChange = 0;
-        if (self.pressingLeft) {
-            xChange -= self.speed;
-        }
-        if (self.pressingUp) {
-            yChange -= self.speed;
-        }
-        if (self.pressingRight) {
-            xChange += self.speed;
-        }
-        if (self.pressingDown) {
-            yChange += self.speed;
-        }
-        if (xChange !== 0 && yChange !== 0) {
-            xChange *= 0.70710678119;
-            yChange *= 0.70710678119;
-        }
-
-        self.x += xChange;
-        self.y += yChange;
-
-        self.stayInBounds();
-    };
-    self.stayInBounds = function (player) {
-        switch (self.team) {
-            case 0:
-                if (self.x < 100) {
-                    self.x = 100;
-                } else if (self.x > 500) {
-                    self.x = 500;
-                }
-                self.y = 450;
-                break;
-            case 1:
-                if (self.x < 700) {
-                    self.x = 700;
-                } else if (self.x > 1250) {
-                    self.x = 1250;
-                }
-                if (self.y < 100) {
-                    self.y = 100;
-                } else if (self.y > 550) {
-                    self.y = 550;
-                }
-                break;
-        }
-    };
-    return self;
-};
-
 let io = socketIO(serv, {});
 io.sockets.on("connection", function (socket) {
     let player;
     socket.id = Math.random();
     socketDict[socket.id] = socket;
 
-    player = Player(socket.id);
+    player = Player(socket.id, w);
     w.playerDict[socket.id] = player;
 
     socket.emit("yourPlayerId", socket.id);
